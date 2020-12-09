@@ -1,6 +1,9 @@
 package pipeline
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -37,4 +40,20 @@ func NewPost(path string) Post {
 		Links:    make([]Link, 0),
 		Meta:     Metadata{},
 	}
+}
+
+func gatherMetadata(path string) (Metadata, error) {
+	name := strings.TrimSuffix(filepath.Base(path), ".md")
+
+	stat, err := os.Stat(path)
+	if err != nil {
+		return Metadata{}, err
+	}
+
+	meta := Metadata{
+		Title: name,
+		Date:  stat.ModTime(),
+	}
+
+	return meta, nil
 }

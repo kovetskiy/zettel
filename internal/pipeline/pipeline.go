@@ -2,9 +2,9 @@ package pipeline
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -22,7 +22,7 @@ import (
 // ReadFiles reads the given directory and appends into given posts
 func ReadFiles(directory string) ([]Post, error) {
 	posts := []Post{}
-	err := filepath.Walk(directory, func(pth string, info os.FileInfo, err error) error {
+	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
 		// Return if there is an error
 		if err != nil {
 			return err
@@ -33,24 +33,13 @@ func ReadFiles(directory string) ([]Post, error) {
 		}
 
 		// Skip any files which aren't markdown.
-		if !strings.HasSuffix(path.Base(pth), ".md") {
+		if !strings.HasSuffix(filepath.Base(path), ".md") {
 			return nil
 		}
 
-		post := NewPost(pth)
-
-		// Read the file
-		data, err := ioutil.ReadFile(path.Clean(pth))
+		post, err := readPost(path)
 		if err != nil {
-			return err
-		}
-
-		// Extract metadata
-		splits := bytes.Split(data, []byte("---\n"))
-		frontMatter := splits[1]
-		if err = yaml.Unmarshal(frontMatter, &post.Meta); err != nil {
-			log.Printf("error while yaml unmarshal: %v", err)
-			return err
+			return fmt.Errorf("error while reading post %q: %v", path, err)
 		}
 
 		// If the post is a draft, skip the file
@@ -58,20 +47,64 @@ func ReadFiles(directory string) ([]Post, error) {
 			return nil
 		}
 
-		// Join the body back ignoring the frontmatter
-		post.Body = string(bytes.Join(splits[2:], []byte("---\n")))
-
 		// Append the post to the posts
 		posts = append(posts, post)
 
 		return nil
 	})
-
 	if err != nil {
 		return []Post{}, err
 	}
 
 	return posts, nil
+}
+
+func readPost(path string) (Post, error) {
+	post := NewPost(path)
+
+	// Read the file
+	data, err := ioutil.ReadFile(filepath.Clean(path))
+	if err != nil {
+		return Post{}, err
+	}
+
+	head, body, err := splitMetaBody(data)
+	if err != nil {
+		return Post{}, err
+	}
+
+	if len(head) == 0 {
+		post.Meta, err = gatherMetadata(filepath.Clean(path))
+		if err != nil {
+			return Post{}, err
+		}
+	} else {
+		err = yaml.Unmarshal(head, &post.Meta)
+		if err != nil {
+			return Post{}, err
+		}
+	}
+
+	post.Body = string(body)
+
+	return post, nil
+}
+
+func splitMetaBody(text []byte) ([]byte, []byte, error) {
+	prefix := []byte("---\n")
+
+	if !bytes.HasPrefix(text, prefix) {
+		return nil, text, nil
+	}
+
+	splits := bytes.SplitN(bytes.TrimPrefix(text, prefix), []byte("\n---\n"), 2)
+	if len(splits) == 2 {
+		return splits[0], splits[1], nil
+	}
+
+	return nil, nil, errors.New(
+		"unexpected heading format: expected 2 --- separators",
+	)
 }
 
 // ReplaceLinks replaces all the `[[]]` links in the body with the link to the HTML page.

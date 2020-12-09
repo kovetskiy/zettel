@@ -6,4 +6,5 @@ type Config struct {
 	Description   string `toml:"description" koanf:"description"`
 	Pygmentsstyle string `toml:"pygmentsstyle" koanf:"pygmentsstyle"`
 	SitePrefix    string `toml:"site_prefix,omitempty" koanf:"site_prefix"`
+	ContentDir    string `toml:"content_dir" koanf:"content_dir"`
 }

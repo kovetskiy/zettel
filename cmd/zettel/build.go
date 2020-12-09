@@ -82,7 +82,7 @@ func (hub *Hub) makeDist() error {
 }
 
 func (hub *Hub) build(cliCtx *cli.Context) error {
-	posts, err := pipeline.ReadFiles(defaultPostDir)
+	posts, err := pipeline.ReadFiles(hub.Config.ContentDir)
 	if err != nil {
 		return err
 	}

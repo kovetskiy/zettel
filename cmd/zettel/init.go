@@ -30,7 +30,7 @@ func (hub *Hub) InitProject() *cli.Command {
 func (hub *Hub) init(cliCtx *cli.Context) error {
 	// get a default config
 	siteDir := cliCtx.Args().First()
-	//Create a folder/directory at a full qualified path
+	// Create a folder/directory at a full qualified path
 	err := os.Mkdir(siteDir, 0750)
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func (hub *Hub) init(cliCtx *cli.Context) error {
 	}
 
 	// create content dir if it doesn't exit
-	contentDir := filepath.Join(siteDir, defaultPostDir)
+	contentDir := filepath.Join(siteDir, cfg.ContentDir)
 
 	_, err = os.Stat(contentDir)
 	if os.IsNotExist(err) {
@@ -59,7 +59,7 @@ func (hub *Hub) init(cliCtx *cli.Context) error {
 	}
 
 	// persist Index file.
-	path := filepath.Join(siteDir, defaultPostDir, defaultindexFileName)
+	path := filepath.Join(siteDir, cfg.ContentDir, defaultindexFileName)
 
 	post, err := os.Create(path)
 	if err != nil {

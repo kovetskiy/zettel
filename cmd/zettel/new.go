@@ -31,7 +31,7 @@ func (hub *Hub) NewPost() *cli.Command {
 func (hub *Hub) newPost(cliCtx *cli.Context) error {
 	title := cliCtx.Args().First()
 	// fill basic metadata
-	var cfg = map[string]interface{}{
+	cfg := map[string]interface{}{
 		"Date":  time.Now().Format(time.RFC3339),
 		"Title": title,
 	}
@@ -51,7 +51,7 @@ func (hub *Hub) newPost(cliCtx *cli.Context) error {
 		return err
 	}
 
-	path := filepath.Join(currentDir, defaultPostDir, sanitizedTitle)
+	path := filepath.Join(currentDir, hub.Config.ContentDir, sanitizedTitle)
 
 	post, err := os.Create(path)
 	if err != nil {

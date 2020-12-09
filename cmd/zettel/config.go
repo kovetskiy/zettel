@@ -32,6 +32,7 @@ func gatherDefaultConfig() Config {
 		SiteName:      "My Zettel",
 		Description:   "Hello World. This is my zettel notebook",
 		Pygmentsstyle: "monokailight",
+		ContentDir:    "content",
 	}
 
 	return config
